@@ -11740,7 +11740,7 @@ nm_toBooster(location){
 		{
 			for k,v in %location%BoosterFields
 			{
-				if nm_fieldBoostCheck(v, 1)
+				if nm_fieldBoostCheck(v, 0) ;switched to variant 0 to differentiate between winds and boost
 				{
 					nm_setStatus("Boosted", v), RecentFBoost := v
 					arg := StrReplace(v, " ")
@@ -14430,7 +14430,7 @@ nm_GoGather(){
 				for i, location in ["blue", "mountain", "red", "coconut"] {
 					for k, v in %location%BoosterFields {
 						last_booster := (location="coconut") ? LastCoconutDis: Last%location%Boost
-						if((nm_fieldBoostCheck(v, 1)) && (%k%) && (RecentFBoost=v && nowUnix()-last_booster<900)) {
+						if((%k%) && (RecentFBoost=v && nowUnix()-last_booster<900)) {
 							BoostChaserField:=v
 							break
 						}
