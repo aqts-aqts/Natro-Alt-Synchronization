@@ -2,7 +2,7 @@
 A extension to Natro Macro that adds the ability to synchronize an alt account with a main account to gather in the same field.
 
 This is particularly useful for tad alts in blue hives, as it allows players to use boosts (gained from the blue field booster) in fields that they normally would not gather in.
-DM @aqts on Discord for assistance, and please give this repository a star if it helped you!
+DM @aqts on Discord (or message @Vqrtical on Roblox) for assistance, and please give this repository a star if it helped you!
 
 SETUP:
 1. You will need a Discord bot setup on both your alt and main account. See https://discord.com/channels/1012610056921038868/1088923608295936000 (in Natro Macro discord) to help you do so.
