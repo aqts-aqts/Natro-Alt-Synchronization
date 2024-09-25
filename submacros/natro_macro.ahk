@@ -841,7 +841,8 @@ nm_importConfig()
 		, "FieldFollowingCheck", 0
 		, "FieldFollowingFollowMode", ""
 		, "FieldFollowingMaxTime", ""
-		, "FieldFollowingChannelID", "")
+		, "FieldFollowingChannelID", ""
+		, "PFieldBoosted", 0)
 
 	local k, v, i, j
 	for k,v in config ; load the default values as globals, will be overwritten if a new value exists when reading
@@ -2021,7 +2022,7 @@ PopStarActive:=0
 PreviousAction:="None"
 CurrentAction:="Startup"
 fieldnamelist := ["Bamboo","Blue Flower","Cactus","Clover","Coconut","Dandelion","Mountain Top","Mushroom","Pepper","Pine Tree","Pineapple","Pumpkin","Rose","Spider","Strawberry","Stump","Sunflower"]
-hotbarwhilelist := ["Never","Always","At Hive","Gathering","Attacking","Microconverter","Whirligig","Enzymes","GatherStart","Snowflake"]
+hotbarwhilelist := ["Never","Always","At Hive","Gathering","Attacking","Microconverter","Whirligig","Enzymes","GatherStart","Snowflake","Glitter"]
 sprinklerImages := ["saturator"]
 ReconnectDelay:=0
 GatherStartTime := ConvertStartTime := 0
@@ -2324,7 +2325,7 @@ MainGui.SetFont("s8 cDefault Norm", "Tahoma")
 MainGui.Add("Button", "x5 y260 w65 h20 -Wrap Disabled vStartButton", " Start (" StartHotkey ")").OnEvent("Click", nm_StartButton)
 MainGui.Add("Button", "x75 y260 w65 h20 -Wrap Disabled vPauseButton", " Pause (" PauseHotkey ")").OnEvent("Click", nm_PauseButton)
 MainGui.Add("Button", "x145 y260 w65 h20 -Wrap Disabled vStopButton", " Stop (" StopHotkey ")").OnEvent("Click", nm_StopButton)
-for k,v in ["PMondoGuid","PMondoGuidComplete","PFieldBoosted","PFieldGuidExtend","PFieldGuidExtendMins","PFieldBoostExtend","PFieldBoostBypass","PPopStarExtend"]
+for k,v in ["PMondoGuid","PMondoGuidComplete","PFieldGuidExtend","PFieldGuidExtendMins","PFieldBoostExtend","PFieldBoostBypass","PPopStarExtend"]
 	%v%:=0
 #include "*i %A_ScriptDir%\..\settings\personal.ahk"
 
@@ -2913,13 +2914,15 @@ MainGui.Add("Text", "xs ys+36 +BackgroundTrans", "3:")
 MainGui.Add("Text", "x+14 yp w50 vFieldBooster3 +Center +BackgroundTrans", FieldBooster3)
 MainGui.Add("Button", "xp-12 yp-1 w12 h16 vFB3Left Disabled", "<").OnEvent("Click", nm_FieldBooster)
 MainGui.Add("Button", "xp+61 yp w12 h16 vFB3Right Disabled", ">").OnEvent("Click", nm_FieldBooster)
-MainGui.Add("Text", "x120 y35 left +BackgroundTrans", "Separate By:")
-MainGui.Add("Text", "xp+3 y+1 w12 vFieldBoosterMins +Center", FieldBoosterMins)
-MainGui.Add("UpDown", "xp+14 yp-1 h16 -16 Range0-12 vFieldBoosterMinsUpDown Disabled", FieldBoosterMins//5).OnEvent("Change", nm_FieldBoosterMins)
-MainGui.Add("Text", "xp+20 yp+1 w100 left +BackgroundTrans", "Mins")
+MainGui.Add("CheckBox", "x109 y37 +center vPFieldBoosted Disabled Checked" PFieldBoosted, "Boosted Field`nBuffs").OnEvent("Click", aq_togglePFieldBoosted)
 MainGui.Add("CheckBox", "x109 y67 +center vBoostChaserCheck Disabled Checked" BoostChaserCheck, "Gather in`nBoosted Field").OnEvent("Click", nm_BoostChaserCheck)
 MainGui.Add("Button", "x200 y65 w90 h30 vBoostedFieldSelectButton Disabled", "Select Boosted Gather Fields").OnEvent("Click", nm_BoostedFieldSelectButton)
 MainGui.SetFont("w700")
+
+aq_togglePFieldBoosted(*) {
+	global PFieldBoosted
+	IniWrite (PFieldBoosted := MainGui["PFieldBoosted"].Value), "settings\nm_config.ini", "Extensions", "PFieldBoosted"
+}
 
 ;shrine
 MainGui.Add("GroupBox", "x300 y25 w190 h105", "Wind Shrine")
@@ -3693,6 +3696,7 @@ nm_TabBoostLock(){
 	MainGui["FB3Left"].Enabled := 0
 	MainGui["FB3Right"].Enabled := 0
 	MainGui["FieldBoosterMinsUpDown"].Enabled := 0
+	MainGui["PFieldBoosted"].Enabled := 0
 	MainGui["BoostChaserCheck"].Enabled := 0
 	MainGui["AutoFieldBoostButton"].Enabled := 0
 	MainGui["BoostedFieldSelectButton"].Enabled := 0
@@ -3743,6 +3747,7 @@ nm_TabBoostUnLock(){
 	MainGui["FB1Right"].Enabled := 1
 	nm_FieldBooster()
 	MainGui["FieldBoosterMinsUpDown"].Enabled := 1
+	MainGui["PFieldBoosted"].Enabled := 1
 	MainGui["BoostChaserCheck"].Enabled := 1
 	MainGui["AutoFieldBoostButton"].Enabled := 1
 	MainGui["BoostedFieldSelectButton"].Enabled := 1
@@ -14439,12 +14444,12 @@ nm_GoGather(){
 				if(BoostChaserField!="none")
 					break
 				;other
-				for key, value in otherFields {
-					if(nm_fieldBoostCheck(value, 1)) {
-						BoostChaserField:=value
-						break
-					}
-				}
+				;for key, value in otherFields {
+				;	if(nm_fieldBoostCheck(value, 1)) {
+				;		BoostChaserField:=value
+				;		break
+				;	}
+				;}
 			}
 			;set field override
 			if(BoostChaserField!="none") {
@@ -14756,6 +14761,16 @@ nm_GoGather(){
 		TCLRKey:=LeftKey
 		AFCLRKey:=RightKey
 	}
+
+	;set field colour
+	field_type := "None"
+	if (FieldName="Pine Tree" || FieldName="Bamboo" || FieldName="Blue Flower" || FieldName="Stump")
+		field_type := "Blue"
+	if (FieldName="Rose" || FieldName="Strawberry" || FieldName="Mushroom" || FieldName="Pepper")
+		field_type := "Red"
+	if (FieldName="Sunflower" || FieldName="Dandelion" || FieldName="Clover" || FieldName="Spider" || FieldName="Cactus" || FieldName="Pumpkin" || FieldName="Pineapple")
+		field_type := "Mountain"
+
 	;set FDC switch
 	FDCEnabled := (FieldDriftCheck && (FieldPattern != "Stationary"))
 
@@ -14781,7 +14796,7 @@ nm_GoGather(){
 		while ((GetKeyState("F14") && (A_Index <= 3600)) || (A_Index = 1)) { ; timeout 3m
 			;use glitter
 			if (Mod(A_Index, 20) = 1) { ; every 1s
-				if(PFieldBoosted && (nowUnix()-GatherFieldBoostedStart)>525 && (nowUnix()-GatherFieldBoostedStart)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none" && fieldOverrideReason="None") { ;between 9 and 15 mins (-minus an extra 15 seconds)
+				if(PFieldBoosted && field_type!="None" && (nowUnix()-Last%field_type%Boost)>720 && (nowUnix()-Last%field_type%Boost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none" && fieldOverrideReason="None") { ;between 12 and 15 mins
 					Send "{" GlitterKey "}"
 					LastGlitter:=nowUnix()
 					IniWrite LastGlitter, "settings\nm_config.ini", "Boost", "LastGlitter"
@@ -14815,7 +14830,7 @@ nm_GoGather(){
 					} else if ((nowUnix()-LastMicroConverter)>10) {
 						interruptReason := "Backpack exceeds " .  FieldUntilPack . " percent"
 						;use glitter early if boosted and close to glitter time
-						if(PFieldBoosted && (nowUnix()-GatherFieldBoostedStart)>600 && (nowUnix()-GatherFieldBoostedStart)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none" && (fieldOverrideReason="None" || fieldOverrideReason="Boost")){ ;between 10 and 15 mins
+						if(PFieldBoosted && (nowUnix()-Last%field_type%Boost)>660 && (nowUnix()-Last%field_type%Boost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none" && (fieldOverrideReason="None" || fieldOverrideReason="Boost")){ ;between 11 and 15 mins
 							Send "{" GlitterKey "}"
 							LastGlitter:=nowUnix()
 							IniWrite LastGlitter, "settings\nm_config.ini", "Boost", "LastGlitter"
@@ -15425,7 +15440,7 @@ nm_convert(){
 		, ConvertStartTime, TotalConvertTime, SessionConvertTime
 		, BackpackPercent, BackpackPercentFiltered
 		, PFieldBoosted, GatherFieldBoosted, GatherFieldBoostedStart, LastGlitter, GlitterKey
-		, GameFrozenCounter, LastConvertBalloon, ConvertBalloon, ConvertMins, HiveBees, ConvertDelay, ConvertGatherFlag
+		, GameFrozenCounter, LastConvertBalloon, ConvertBalloon, ConvertMins, HiveBees, ConvertDelay, ConvertGatherFlag, CurrentField
 
 	if ((VBState = 1) || nm_MondoInterrupt())
 		return
@@ -15447,6 +15462,16 @@ nm_convert(){
 	ConvertStartTime:=nowUnix()
 	inactiveHoney:=0
 	ballooncomplete:=0
+
+	;determine field type
+	field_type := "None"
+	if (CurrentField="Pine Tree" || CurrentField="Bamboo" || CurrentField="Blue Flower" || CurrentField="Stump")
+		field_type := "Blue"
+	if (CurrentField="Rose" || CurrentField="Strawberry" || CurrentField="Mushroom" || CurrentField="Pepper")
+		field_type := "Red"
+	if (CurrentField="Sunflower" || CurrentField="Dandelion" || CurrentField="Clover" || CurrentField="Spider" || CurrentField="Cactus" || CurrentField="Pumpkin" || CurrentField="Pineapple")
+		field_type := "Mountain"
+
 	;empty pack
 	if (BackpackPercentFiltered > 0) {
 		nm_setStatus("Converting", "Backpack")
@@ -15460,7 +15485,7 @@ nm_convert(){
 			if (disconnectcheck()) {
 				return
 			}
-			if (PFieldBoosted && (nowUnix()-GatherFieldBoostedStart)>780 && (nowUnix()-GatherFieldBoostedStart)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none") {
+			if (PFieldBoosted && field_type!="None" && (nowUnix()-Last%field_type%Boost)>780 && (nowUnix()-Last%field_type%Boost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none") {
 				nm_setStatus("Interupted", "Field Boosted")
 				return
 			}
@@ -15532,7 +15557,7 @@ nm_convert(){
 				if (disconnectcheck()) {
 					return
 				}
-				if ((PFieldBoosted = 1) && (nowUnix()-GatherFieldBoostedStart)>780 && (nowUnix()-GatherFieldBoostedStart)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none") {
+				if (PFieldBoosted && field_type!="None" && (nowUnix()-Last%field_type%Boost)>780 && (nowUnix()-Last%field_type%Boost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none") {
 					nm_setStatus("Interupted", "Field Boosted")
 					return
 				}
