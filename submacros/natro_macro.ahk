@@ -14799,6 +14799,7 @@ nm_GoGather(){
 				if(PFieldBoosted && field_type!="None" && (nowUnix()-Last%field_type%Boost)>720 && (nowUnix()-Last%field_type%Boost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none" && fieldOverrideReason="None") { ;between 12 and 15 mins
 					Send "{" GlitterKey "}"
 					LastGlitter:=nowUnix()
+					Last%field_type%Boost:=nowUnix()
 					IniWrite LastGlitter, "settings\nm_config.ini", "Boost", "LastGlitter"
 				}
 				nm_autoFieldBoost(FieldName)
@@ -14833,6 +14834,7 @@ nm_GoGather(){
 						if(PFieldBoosted && (nowUnix()-Last%field_type%Boost)>660 && (nowUnix()-Last%field_type%Boost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none" && (fieldOverrideReason="None" || fieldOverrideReason="Boost")){ ;between 11 and 15 mins
 							Send "{" GlitterKey "}"
 							LastGlitter:=nowUnix()
+							Last%field_type%Boost:=nowUnix()
 							IniWrite LastGlitter, "settings\nm_config.ini", "Boost", "LastGlitter"
 						}
 						break
