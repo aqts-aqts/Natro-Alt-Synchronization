@@ -9551,7 +9551,7 @@ nm_Reset(checkAll:=1, wait:=2000, convert:=1, force:=0){
 			GetRobloxClientPos()
 			send "{" SC_Esc "}{" SC_R "}{" SC_Enter "}"
 			n := 0
-			while ((n < 2) && (A_Index <= 200))
+			while ((n < 2) && (A_Index <= 80))
 			{
 				Sleep 100
 				pBMScreen := Gdip_BitmapFromScreen(windowX "|" windowY "|" windowWidth "|50")
@@ -14796,7 +14796,7 @@ nm_GoGather(){
 		while ((GetKeyState("F14") && (A_Index <= 3600)) || (A_Index = 1)) { ; timeout 3m
 			;use glitter
 			if (Mod(A_Index, 20) = 1) { ; every 1s
-				if(PFieldBoosted && field_type!="None" && (nowUnix()-Last%field_type%Boost)>720 && (nowUnix()-Last%field_type%Boost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none" && fieldOverrideReason="None") { ;between 12 and 15 mins
+				if(PFieldBoosted && field_type!="None" && (nowUnix()-Last%field_type%Boost)>720 && (nowUnix()-Last%field_type%Boost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none" && (fieldOverrideReason="None" || fieldOverrideReason="Boost")) { ;between 12 and 15 mins
 					Send "{" GlitterKey "}"
 					LastGlitter:=nowUnix()
 					Last%field_type%Boost:=nowUnix()
@@ -14831,7 +14831,7 @@ nm_GoGather(){
 					} else if ((nowUnix()-LastMicroConverter)>10) {
 						interruptReason := "Backpack exceeds " .  FieldUntilPack . " percent"
 						;use glitter early if boosted and close to glitter time
-						if(PFieldBoosted && (nowUnix()-Last%field_type%Boost)>660 && (nowUnix()-Last%field_type%Boost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none" && (fieldOverrideReason="None" || fieldOverrideReason="Boost")){ ;between 11 and 15 mins
+						if(PFieldBoosted && field_type!="None" && (nowUnix()-Last%field_type%Boost)>660 && (nowUnix()-Last%field_type%Boost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none" && (fieldOverrideReason="None" || fieldOverrideReason="Boost")){ ;between 11 and 15 mins
 							Send "{" GlitterKey "}"
 							LastGlitter:=nowUnix()
 							Last%field_type%Boost:=nowUnix()
@@ -15442,7 +15442,7 @@ nm_convert(){
 		, ConvertStartTime, TotalConvertTime, SessionConvertTime
 		, BackpackPercent, BackpackPercentFiltered
 		, PFieldBoosted, GatherFieldBoosted, GatherFieldBoostedStart, LastGlitter, GlitterKey
-		, GameFrozenCounter, LastConvertBalloon, ConvertBalloon, ConvertMins, HiveBees, ConvertDelay, ConvertGatherFlag, CurrentField
+		, GameFrozenCounter, LastConvertBalloon, ConvertBalloon, ConvertMins, HiveBees, ConvertDelay, ConvertGatherFlag, LastBlueBoost, LastRedBoost, LastMountainBoost
 
 	if ((VBState = 1) || nm_MondoInterrupt())
 		return
@@ -15465,15 +15465,6 @@ nm_convert(){
 	inactiveHoney:=0
 	ballooncomplete:=0
 
-	;determine field type
-	field_type := "None"
-	if (CurrentField="Pine Tree" || CurrentField="Bamboo" || CurrentField="Blue Flower" || CurrentField="Stump")
-		field_type := "Blue"
-	if (CurrentField="Rose" || CurrentField="Strawberry" || CurrentField="Mushroom" || CurrentField="Pepper")
-		field_type := "Red"
-	if (CurrentField="Sunflower" || CurrentField="Dandelion" || CurrentField="Clover" || CurrentField="Spider" || CurrentField="Cactus" || CurrentField="Pumpkin" || CurrentField="Pineapple")
-		field_type := "Mountain"
-
 	;empty pack
 	if (BackpackPercentFiltered > 0) {
 		nm_setStatus("Converting", "Backpack")
@@ -15487,7 +15478,7 @@ nm_convert(){
 			if (disconnectcheck()) {
 				return
 			}
-			if (PFieldBoosted && field_type!="None" && (nowUnix()-Last%field_type%Boost)>780 && (nowUnix()-Last%field_type%Boost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none") {
+			if (PFieldBoosted && (nowUnix()-LastBlueBoost)>780 && (nowUnix()-LastBlueBoost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none") {
 				nm_setStatus("Interupted", "Field Boosted")
 				return
 			}
@@ -15559,7 +15550,7 @@ nm_convert(){
 				if (disconnectcheck()) {
 					return
 				}
-				if (PFieldBoosted && field_type!="None" && (nowUnix()-Last%field_type%Boost)>780 && (nowUnix()-Last%field_type%Boost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none") {
+				if (PFieldBoosted && (nowUnix()-LastBlueBoost)>780 && (nowUnix()-LastBlueBoost)<900 && (nowUnix()-LastGlitter)>900 && GlitterKey!="none") {
 					nm_setStatus("Interupted", "Field Boosted")
 					return
 				}
@@ -16369,7 +16360,7 @@ nm_claimHiveSlot(){
 			send "{" SC_Esc "}{" SC_R "}{" SC_Enter "}"
 			SetKeyDelay PrevKeyDelay
 			n := 0
-			while ((n < 2) && (A_Index <= 200))
+			while ((n < 2) && (A_Index <= 80))
 			{
 				Sleep 100
 				GetRobloxClientPos(hwnd)
@@ -17088,7 +17079,7 @@ nm_hotbar(boost:=0){
 			break
 		}
 		;gathering
-		else if(state="Gathering" && (fieldOverrideReason="None" || (QuestBoostCheck = 1 && fieldOverrideReason="Quest")) && ActiveHotkeys[key][1]="Gathering" && (nowUnix()-ActiveHotkeys[key][4])>ActiveHotkeys[key][3]) {
+		else if(state="Gathering" && fieldOverrideReason!="Quest" && ActiveHotkeys[key][1]="Gathering" && (nowUnix()-ActiveHotkeys[key][4])>ActiveHotkeys[key][3]) {
 			HotkeyNum:=ActiveHotkeys[key][2]
 			send "{sc00" HotkeyNum+1 "}"
 			LastHotkeyN:=nowUnix()
@@ -17097,7 +17088,7 @@ nm_hotbar(boost:=0){
 			break
 		}
 		;GatherStart
-		else if(state="Gathering" && (fieldOverrideReason="None" || fieldOverrideReason="Boost" || (QuestBoostCheck = 1 && fieldOverrideReason="Quest")) && (nowUnix()-GatherStartTime)<10 && ActiveHotkeys[key][1]="GatherStart" && (nowUnix()-ActiveHotkeys[key][4])>ActiveHotkeys[key][3]) {
+		else if(state="Gathering" && fieldOverrideReason!="Quest" && (nowUnix()-GatherStartTime)<10 && ActiveHotkeys[key][1]="GatherStart" && (nowUnix()-ActiveHotkeys[key][4])>ActiveHotkeys[key][3]) {
 			HotkeyNum:=ActiveHotkeys[key][2]
 			send "{sc00" HotkeyNum+1 "}"
 			LastHotkeyN:=nowUnix()
@@ -18936,7 +18927,7 @@ nm_PathVars(){
 			SetKeyDelay 100+KeyDelay
 
 			n := 0
-			while ((n < 2) && (A_Index <= 200))
+			while ((n < 2) && (A_Index <= 80))
 			{
 				Sleep 100
 				pBMScreen := Gdip_BitmapFromScreen(windowX "|" windowY "|" windowWidth "|50")
